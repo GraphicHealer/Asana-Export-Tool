@@ -25,7 +25,7 @@ You will need an Asana API Token to use this app.
 4. SAVE THE TOKEN. You will NOT see it again after copying it, so make sure you save it somewhere.
 
 ## Run the App
-1. Download the latest release (Windows only for the moment, sorry).
+1. Download the latest release (Windows only for the moment, sorry): https://github.com/GraphicHealer/AsanaExporter/releases/latest
 2. Run the EXE (It's all self-contained).
 3. Paste in a valid Asana API Token (See above).
 4. Press `Connect`
