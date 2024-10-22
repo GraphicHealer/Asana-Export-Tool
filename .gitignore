@@ -15,3 +15,7 @@
 .venv/*
 dist/*
 build/*
+
+# Debug Files
+Log_Export.txt
+Attachments.txt
