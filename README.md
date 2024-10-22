@@ -8,19 +8,26 @@ AET (Asana Export Tool) is a tool for quickly scanning and downloading data from
 ## Planned Support:
 - Linux and Mac Compatibility
 - Task Data
-- Comments
 - Project Data
 - Team Data
+- Comments/Discussions
+
 And any other suggestions or requests.
 
+PRs are VERY welcome, I will get to them as I have time.
+
 # Usage:
-1. Download the latest release (Windows only for the moment, sorry).
+## Get Asana Token:
+You will need an Asana API Token to use this app.
+1. Open: https://app.asana.com/0/my-apps in a browser.
+2. Click `Create New Token` in the bottom left.
+3. Copy the token value.
+4. SAVE THE TOKEN. You will NOT see it again after copying it, so make sure you save it somewhere.
+
+## Run the App
+1. Download the latest release (Windows only for the moment, sorry): https://github.com/GraphicHealer/AsanaExporter/releases/latest
 2. Run the EXE (It's all self-contained).
-3. Paste in a valid Asana API Token.
-   1. To get the Asana API Token, Open: https://app.asana.com/0/my-apps in a browser.
-   2. Click `Create New Token` in the bottom left.
-   3. Copy the token value.
-   4. SAVE THE TOKEN. You will NOT see it again after copying it, so make sure you save it somewhere.
+3. Paste in a valid Asana API Token (See above).
 4. Press `Connect`
 5. If you are connected to more than one workspace, select your workspace from the list.
 6. Click the `Scan` button in the upper-right.
@@ -48,7 +55,8 @@ This assumes Python is installed and running on your system.
     ```
 
 ## Build
-To build, run the following in a terminal opened in the Python VENV:
+To build the EXE, run the following in a terminal opened in the Python VENV:
 ```
 pyinstaller AsanaExport.spec
 ```
+the result will be saved in the `dist` folder as `AsanaExport.exe`.
