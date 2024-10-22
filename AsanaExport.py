@@ -10,13 +10,16 @@
 
 # Import Libraries
 from pathvalidate import sanitize_filename
+from pathvalidate import sanitize_filepath
 from asana.rest import ApiException
 from threading import Thread
 import FreeSimpleGUI as sg
 import urllib.request
+import requests
 import pathlib
 import asana
 import time
+import ast
 import os
 import re
 
@@ -83,7 +86,7 @@ def getAttachments(win, api_instance, data):
 
 # Function to Find Attachment Files
 def getFiles(win, task_api, attachment_api, project):
-    proj_name = re.sub(' {2,}',' ',sanitize_filename(''.join(i for i in project['name'] if ord(i)<128)).replace(' *',' '))
+    proj_name = re.sub(' {2,}',' ',sanitize_filename(''.join(i for i in project['name'] if ord(i)<128)))
     attachment_list = getAttachments(win, attachment_api, project)
     tasks = getTasks(win, task_api, project)
     length = len(tasks)
@@ -119,11 +122,15 @@ def getFiles(win, task_api, attachment_api, project):
 
 # Function to Download a File
 def downloadFile(win, url, filepath):
+    filepath = sanitize_filepath(filepath)
+
     win['PROBAR1'].update(max=100,current_count=0)
     win['PROLAB1'].update('Downloading: '+os.path.basename(filepath))
     win.refresh()
+
     pathlib.Path(os.path.dirname(filepath)).mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, filepath, progress)
+    response = urllib.request.urlretrieve(url, filepath, progress)
+    logger(win, str(response)) if debug_view else None
 
 # Function to Track Download Progress
 def progress(count, block_size, total_size):
@@ -185,6 +192,8 @@ def window_scan(win, values, teams_api, projects_api, attachments_api, tasks_api
         if Status == 'Cancel':
             exit()
             break
+        if (project['name'] == 'Maintenance Tickets'):
+            continue
         count += 1
         win['PROBAR2'].update(current_count=count)
         win['PROCOUNT2'].update(str(count) + "/" + str(length))
@@ -197,6 +206,7 @@ def window_scan(win, values, teams_api, projects_api, attachments_api, tasks_api
     win['PROG'].update(visible=False)
     win['EXPORT'].update(visible=True)
     win['QUIT'].update('Quit')
+    win['EXPORT_ATTACH'].update(disabled=False)
     Status = 'Scanned'
     win.refresh()
 
@@ -212,7 +222,7 @@ def window_download(win, values):
     Status = 'Downloading'
     logger(win, 'Downloading Attachments...', label=True)
     logger(win, '')
-    export_dir = values['Browse']
+    export_dir = values['Browse'].replace('/', '\\')
     length = len(attachments)
     count = 0
     win['PROBAR2'].update(max=length, current_count=0)
@@ -232,7 +242,7 @@ def window_download(win, values):
         win['PROCOUNT2'].update(str(count) + "/" + str(length))
         logger(win, "Downloading '"+file['name']+"' to '"+filepath+"' ("+str(count)+"/"+str(length)+")")
         downloadFile(win, file['url'], filepath)
-    logger(win, "Download Complete! Files Downloaded to '"+filepath+"'", label=True)
+    logger(win, "Download Complete! Files Downloaded to '"+export_dir+"'", label=True)
     win['PROG'].update(visible=False)
     win['DOWNLOAD'].update(disabled=False)
     win['DOWNLOAD'].update('Open Folder')
@@ -260,7 +270,7 @@ workspace_layout = [
 ]
 
 scanner_layout = [
-    [sg.Text("Click 'Scan' to Find Attachments", key='LABEL'), sg.Push(), sg.Button('Scan'), sg.Button('Export Log', visible=False, key='EXPORT_LOG')],
+    [sg.Text("Click 'Scan' to Find Attachments", key='LABEL'), sg.Push(), sg.Button('Scan'), sg.Button('Export Log', visible=False, key='EXPORT_LOG'), sg.Button('Export Attachments', visible=False, key='EXPORT_ATTACH', disabled=True)],
     [sg.Multiline(disabled=True, autoscroll=True, autoscroll_only_at_bottom=True, size=(50, 10), expand_x=True, key='LOG')]
 ]
 
@@ -318,9 +328,11 @@ while True:
             logger(window, 'Debug View Enabled', label=True)
             window['LOG'].set_size(size=(100, 20))
             window['EXPORT_LOG'].update(visible=True)
+            window['EXPORT_ATTACH'].update(visible=True)
         else:
             window['LOG'].set_size(size=(50, 10))
             window['EXPORT_LOG'].update(visible=False)
+            window['EXPORT_ATTACH'].update(visible=False)
 
     if (event == 'Connect'):
         if values['TOKEN'] == '':
@@ -360,8 +372,25 @@ while True:
         logger(window, "Click 'Scan' to Get Attachments", label=True)
 
     if (event == 'Scan'):
-        scanThread = Thread(target=window_scan, args=(window, values, teams_api, projects_api, attachments_api, tasks_api, workspace), daemon=True).start()
-        # window_scan(window, values, teams_api, projects_api, attachments_api, tasks_api, workspace)
+        if ((debug_view == True) and (os.path.exists('Attachments.txt') == True)):
+            logger(window, ' Attachments.txt Found, Importing...', label=True)
+            f = open('Attachments.txt', 'r')
+            for line in f:
+                attachments.append(ast.literal_eval(line.rstrip()))
+            f.close()
+            window['EXPORT'].update(visible=True)
+            window['QUIT'].update('Quit')
+            window['EXPORT_ATTACH'].update(disabled=False)
+            Status = 'Scanned'
+
+            if ((values['Browse'] != 'Select an Export Directory...') and (values['Browse'] != '') and (attachments != [])):
+                window['DOWNLOAD'].update(disabled=False)
+                logger(window, "Click 'Start Download' to Download All Attachments.", label=True)
+            else:
+                logger(window, "Click 'Browse' to Select an Export Directory.", label=True)
+        else:
+            scanThread = Thread(target=window_scan, args=(window, values, teams_api, projects_api, attachments_api, tasks_api, workspace), daemon=True).start()
+
 
     if (event == 'Browse'):
         if ((values['Browse'] == '') or (values['Browse'] == 'Select an Export Directory...')):
@@ -372,9 +401,15 @@ while True:
             logger(window, "Click 'Start Download' to Download All Attachments.", label=True)
             window['DOWNLOAD'].update(disabled=False)
 
-    if (event == 'Export Log'):
+    if (event == 'EXPORT_LOG'):
         f = open('Log_Export.txt', 'w')
         for line in log:
+            f.write(str(line)+'\n')
+        f.close()
+
+    if (event == 'EXPORT_ATTACH'):
+        f = open('Attachments.txt', 'w')
+        for line in attachments:
             f.write(str(line)+'\n')
         f.close()
 
