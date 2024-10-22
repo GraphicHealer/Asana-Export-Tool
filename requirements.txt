@@ -1,5 +1,4 @@
 asana==5.0.10
 FreeSimpleGUI==5.1.1
 pathvalidate==3.2.1
-Requests==2.32.3
 pyinstaller==6.11.0

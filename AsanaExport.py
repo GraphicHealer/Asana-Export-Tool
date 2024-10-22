@@ -15,7 +15,6 @@ from asana.rest import ApiException
 from threading import Thread
 import FreeSimpleGUI as sg
 import urllib.request
-import requests
 import pathlib
 import asana
 import time
