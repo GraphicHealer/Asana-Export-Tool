@@ -27,6 +27,8 @@ import re
 log = []
 Status = ''
 attachments = []
+folders = []
+noUrl = []
 debug_view = False
 
 # Get Icon
@@ -87,6 +89,14 @@ def getAttachments(win, api_instance, data):
 # Function to Find Attachment Files
 def getFiles(win, task_api, attachment_api, project):
     proj_name = re.sub(' {2,}',' ',sanitize_filename(''.join(i for i in project['name'] if ord(i)<128)))
+    folderCount = 0
+    folderEnd = ''
+    for folder in folders:
+        if proj_name in folder:
+            folderEnd = ' (' + str(folderCount) + ')'
+            folderCount += 1
+    proj_name = proj_name + folderEnd
+    folders.append(proj_name)
     attachment_list = getAttachments(win, attachment_api, project)
     tasks = getTasks(win, task_api, project)
     length = len(tasks)
@@ -103,19 +113,34 @@ def getFiles(win, task_api, attachment_api, project):
 
     logger(win, "   Parsing Attachments...", label=True)
     output = []
+    files = []
     length = len(attachment_list)
     count = 0
     win['PROBAR1'].update(max=length, current_count=0)
     win['PROLAB1'].update("'"+proj_name+"' Attachments")
     for attachment in attachment_list:
         count += 1
+        fileName = re.sub(' {2,}',' ',sanitize_filename(''.join(i for i in attachment['name'] if ord(i)<128)))
+        fileCount = 0
+        fileEnd = ''
+        for file in files:
+            if fileName in file:
+                fileEnd = ' (' + str(fileCount) + ')'
+                fileCount += 1
+        fileName = fileName + fileEnd
+        files.append(fileName)
         win['PROBAR1'].update(current_count=count)
         win['PROCOUNT1'].update(str(count) + "/" + str(length))
+        logger(win, attachment['download_url']) if debug_view else None
+        if (attachment['download_url'] == None):
+            logger(win, "-------- Attachment has no download URL. --------") if debug_view else None
+            noUrl.append(attachment)
+            continue
         output.append({
             'gid': attachment['gid'],
             'url': attachment['download_url'],
             'folder': proj_name,
-            'name': re.sub(' {2,}',' ',sanitize_filename(''.join(i for i in attachment['name'] if ord(i)<128)))
+            'name': fileName
         })
         logger(win, "    - "+str(output[-1]['name'])+" ("+str(count)+"/"+str(len(attachment_list))+")") if debug_view else None
     return output
@@ -127,10 +152,11 @@ def downloadFile(win, url, filepath):
     win['PROBAR1'].update(max=100,current_count=0)
     win['PROLAB1'].update('Downloading: '+os.path.basename(filepath))
     win.refresh()
-
-    pathlib.Path(os.path.dirname(filepath)).mkdir(parents=True, exist_ok=True)
-    response = urllib.request.urlretrieve(url, filepath, progress)
-    logger(win, str(response)) if debug_view else None
+    try:
+        pathlib.Path(os.path.dirname(filepath)).mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(url, filepath, progress)
+    except Exception as e:
+        logger(win, 'URL: '+str(url)+'\n'+'Error: '+str(e)) if debug_view else None
 
 # Function to Track Download Progress
 def progress(count, block_size, total_size):
@@ -192,8 +218,6 @@ def window_scan(win, values, teams_api, projects_api, attachments_api, tasks_api
         if Status == 'Cancel':
             exit()
             break
-        if (project['name'] == 'Maintenance Tickets'):
-            continue
         count += 1
         win['PROBAR2'].update(current_count=count)
         win['PROCOUNT2'].update(str(count) + "/" + str(length))
@@ -203,6 +227,7 @@ def window_scan(win, values, teams_api, projects_api, attachments_api, tasks_api
     logger(win, str(len(projects)) + ' Projects Scanned.\n', label=True)
 
     logger(win, "Scan Complete! "+str(len(attachments)) + ' Attachments Found.', label=True)
+    logger(win, 'Attachments with NO Download URL:\n'+'\n'.join(noUrl)) if debug_view else None
     win['PROG'].update(visible=False)
     win['EXPORT'].update(visible=True)
     win['QUIT'].update('Quit')
@@ -228,6 +253,7 @@ def window_download(win, values):
     win['PROBAR2'].update(max=length, current_count=0)
     win['PROLAB2'].update('Attachments')
     win['PROG'].update(visible=True)
+    win['PROG2'].update(visible=True)
     win['QUIT'].update('Cancel')
     win['DOWNLOAD'].update(disabled=True)
     win['Browse'].update(disabled=True)
@@ -270,7 +296,7 @@ workspace_layout = [
 ]
 
 scanner_layout = [
-    [sg.Text("Click 'Scan' to Find Attachments", key='LABEL'), sg.Push(), sg.Button('Scan'), sg.Button('Export Log', visible=False, key='EXPORT_LOG'), sg.Button('Export Attachments', visible=False, key='EXPORT_ATTACH', disabled=True)],
+    [sg.Text("Click 'Scan' to Find Attachments", key='LABEL'), sg.Push(), sg.Button('Scan'), sg.Button('Export Log', visible=False, key='EXPORT_LOG'), sg.Button('Export Attachments', visible=False, key='EXPORT_ATTACH')],
     [sg.Multiline(disabled=True, autoscroll=True, autoscroll_only_at_bottom=True, size=(50, 10), expand_x=True, key='LOG')]
 ]
 
@@ -380,7 +406,6 @@ while True:
             f.close()
             window['EXPORT'].update(visible=True)
             window['QUIT'].update('Quit')
-            window['EXPORT_ATTACH'].update(disabled=False)
             Status = 'Scanned'
 
             if ((values['Browse'] != 'Select an Export Directory...') and (values['Browse'] != '') and (attachments != [])):
