@@ -13,8 +13,8 @@
 
 # VENV
 .venv/*
-dist/
-build/
+dist/*
+build/*
 
 # Debug Files
 Log_Export.txt
