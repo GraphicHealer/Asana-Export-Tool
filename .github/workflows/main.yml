@@ -49,7 +49,7 @@ jobs:
           pyinstaller AsanaExportTool.spec
           ls
           ls .\\dist
-          xcopy .\\dist\\AsanaExportTool.exe .\\AsanaExportTool-${{ github.event.release.tag_name }}.exe
+          copy .\\dist\\AsanaExportTool.exe .\\AsanaExportTool-${{ github.event.release.tag_name }}.exe
       - name: Release
         id: release
         uses: softprops/action-gh-release@v2
