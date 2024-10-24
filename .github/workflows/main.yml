@@ -25,13 +25,13 @@ jobs:
           pyinstaller AsanaExportTool.spec
           ls -la
           ls -la ./dist
-          zip ./AsanaExportTool-Linux-${{ env.TAG }}.txz ./dist/AsanaExportTool
+          zip ./AsanaExportTool-Linux-${{ env.TAG }}.zip ./dist/AsanaExportTool
       - name: Release
         id: release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./AsanaExportTool-Linux-${{ env.TAG }}.txz
+            ./AsanaExportTool-Linux-${{ env.TAG }}.zip
   WindowsRelease:
     name: Create Windows Release
     runs-on: windows-latest
