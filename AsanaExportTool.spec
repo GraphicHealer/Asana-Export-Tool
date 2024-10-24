@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['AsanaExport.py'],
+    ['AsanaExportTool.py'],
     pathex=[],
     binaries=[],
     datas=[('icons\\asana.ico', 'icons')],
