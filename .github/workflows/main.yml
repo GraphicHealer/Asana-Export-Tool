@@ -17,7 +17,9 @@ jobs:
           python -m venv .
           python -m pip install -r requirements.txt
           pyinstaller AsanaExportTool.spec
-          cp dist/AsanaExportTool.exe AsanaExportTool-${{ github.event.release.tag_name }}.exe
+          ls -la
+          ls -la ./dist
+          cp ./dist/*.exe AsanaExportTool-${{ github.event.release.tag_name }}.exe
       - name: Release
         id: release
         uses: softprops/action-gh-release@v2
