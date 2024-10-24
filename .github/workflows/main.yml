@@ -14,6 +14,7 @@ jobs:
       - name: Run PyInstaller to Create Python Binary
         id: pyinstaller-linux
         run: |
+          python --version
           python -m venv .
           python -m pip install -r requirements.txt
           pyinstaller AsanaExportTool.spec
@@ -36,6 +37,7 @@ jobs:
       - name: Run PyInstaller to Create Windows EXE
         id: pyinstaller-windows
         run: |
+          python --version
           python -m venv .
           python -m pip install -r requirements.txt
           pyinstaller AsanaExportTool.spec
