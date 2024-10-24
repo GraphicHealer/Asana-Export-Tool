@@ -4,22 +4,44 @@ on:
     types: [published]
 
 jobs:
-  releaseTxz:
-    name: Create Txz and Release
+  LinuxRelease:
+    name: Create Linux Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: master
-      - name: Run PyInstaller to Create EXE from src
-        id: pyinstaller
+      - name: Run PyInstaller to Create Python Binary
+        id: pyinstaller-linux
         run: |
           python -m venv .
           python -m pip install -r requirements.txt
           pyinstaller AsanaExportTool.spec
           ls -la
           ls -la ./dist
-          cp ./dist/*.exe AsanaExportTool-${{ github.event.release.tag_name }}.exe
+          zip ./AsanaExportTool-${{ github.event.release.tag_name }}.txz ./dist/AsanaExportTool
+      - name: Release
+        id: release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            AsanaExportTool-${{ github.event.release.tag_name }}.txz
+  WindowsRelease:
+    name: Create Windows Release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - name: Run PyInstaller to Create Windows EXE
+        id: pyinstaller-windows
+        run: |
+          python -m venv .
+          python -m pip install -r requirements.txt
+          pyinstaller AsanaExportTool.spec
+          ls -la
+          ls -la .\\dist
+          xcopy .\\dist\\AsanaExportTool.exe .\\AsanaExportTool-${{ github.event.release.tag_name }}.exe
       - name: Release
         id: release
         uses: softprops/action-gh-release@v2
