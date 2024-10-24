@@ -15,7 +15,7 @@ jobs:
         id: pyinstaller
         run: |
           python -m venv .
-          python -m pip install requirements.txt
+          python -m pip install -r requirements.txt
           pyinstaller AsanaExportTool.spec
           cp dist/AsanaExportTool.exe AsanaExportTool-${{ github.event.release.tag_name }}.exe
       - name: Release
