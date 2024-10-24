@@ -263,7 +263,7 @@ class AsanaExport:
         self.download_button = ttk.Button(self.export_layout, text="Start Download", command=lambda: Thread(target=self.download_attachments, daemon=True).start(), state='disabled')
         self.download_button.grid(column=2, row=1, sticky=(N,E,S,W), padx=6, pady=0)
 
-        self.open_folder_button = ttk.Button(self.export_layout, text="Open Folder", command=self.open_folder, state='disabled')
+        self.open_folder_button = ttk.Button(self.export_layout, text="Open Folder", command=self.open_folder)
         self.open_folder_button.grid(column=2, row=2, sticky=(N,E,S,W), padx=6, pady=0)
         self.hide(self.open_folder_button)
 
