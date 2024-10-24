@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
       - name: Run PyInstaller to Create EXE from src
         id: pyinstaller
         run: |
