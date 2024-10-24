@@ -457,7 +457,7 @@ class AsanaExport:
         self.item_progress.set(percentage)
 
     def close(self):
-        match self.status:
+        match (self.status):
             case 'Scanning':
                 if (messagebox.askyesno('Exit', 'There is an active scan, Are you sure you want to quit?') == True):
                     self.status = 'Cancel'
