@@ -7,6 +7,8 @@ jobs:
   LinuxRelease:
     name: Create Linux Release
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,16 +25,18 @@ jobs:
           pyinstaller AsanaExportTool.spec
           ls -la
           ls -la ./dist
-          zip ./AsanaExportTool-${{ github.event.release.tag_name }}.txz ./dist/AsanaExportTool
+          zip ./AsanaExportTool-${{ env.TAG }}.txz ./dist/AsanaExportTool
       - name: Release
         id: release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./AsanaExportTool-${{ github.event.release.tag_name }}.txz
+            ./AsanaExportTool-${{ env.TAG }}.txz
   WindowsRelease:
     name: Create Windows Release
     runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,10 +53,10 @@ jobs:
           pyinstaller AsanaExportTool.spec
           ls
           ls .\\dist
-          copy .\\dist\\AsanaExportTool.exe .\\AsanaExportTool-${{ github.event.release.tag_name }}.exe
+          copy .\\dist\\AsanaExportTool.exe .\\AsanaExportTool-${{ env.TAG }}.exe
       - name: Release
         id: release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./AsanaExportTool-${{ github.event.release.tag_name }}.exe
+            ./AsanaExportTool-${{ env.TAG }}.exe
