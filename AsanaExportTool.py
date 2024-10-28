@@ -275,6 +275,13 @@ class AsanaExport:
             open = True
         if (popen == True):
             self.log_tree.item(parent, open=True)
+        if (id is not None):
+            count = 0
+            TestID = id
+            while (self.log_tree.exists(TestID)):
+                TestID = id+'_'+str(count)
+                count += 1
+            id = TestID
         self.log_tree.insert(parent=parent, index='end', iid=id, text=string, open=open)
         self.log_tree.yview_moveto(1)
 
